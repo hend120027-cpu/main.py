@@ -20,7 +20,7 @@ BANNED_USERS = {}    # {user_id: True}
 ALL_USERS = set()    # كل مستخدم دخل البوت
 stop_users = {}
 last_check_time = {}
-ANTI_SPAM_SECONDS = 7
+ANTI_SPAM_SECONDS = 6
 
 # 🔥 أضف فوق خالص بعد المتغيرات
 user_tasks = {}
