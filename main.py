@@ -28,7 +28,6 @@ user_tasks = {}
 # ------------------- Gates -------------------
 
 GATES = [
-    "https://rightchange.org/?give_forms=zakat",
     "https://raybensch.com/donations/support-ray/",
     "https://www.mgn1.org/events/"
 ]
