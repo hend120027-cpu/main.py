@@ -10,7 +10,7 @@ from telegram.ext import (
     Application, CommandHandler, MessageHandler, filters, ContextTypes
 )
 
-TOKEN = '7834120140:AAG2HFrpuictfFSZisF1m1__EjE0zcnl_cE'
+TOKEN = '8647240736:AAEGXuwmtZkUvAfbURX2BcyyuoWD-TekP_0'
 
 # ------------------- Users -------------------
 
@@ -20,7 +20,7 @@ BANNED_USERS = {}    # {user_id: True}
 ALL_USERS = set()    # كل مستخدم دخل البوت
 stop_users = {}
 last_check_time = {}
-ANTI_SPAM_SECONDS = 6
+ANTI_SPAM_SECONDS = 7
 
 # 🔥 أضف فوق خالص بعد المتغيرات
 user_tasks = {}
