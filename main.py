@@ -104,7 +104,7 @@ async def format_response(card_full, status, response, taken):
     else:
         title = "#Declined ❌"
 
-    return f" #PayPal_Custom ($1.00) 🌟
+    return f"#PayPal_Custom ($1.00) 🌟
 - - - - - - - - - - - - - - - - - - - - - -
 [ϟ] Card: {card_full}
 [ϟ] Response: {response}
