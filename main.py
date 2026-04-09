@@ -96,20 +96,25 @@ async def check_card_api(card_full):
 async def format_response(card_full, status, response, taken):
     bin_number = card_full.split("|")[0][:6]
     info, bank, country = await get_bin_info(bin_number)
+
     if status == "approved":
         title = "#Charge 🔥"
     elif status == "live":
         title = "#Live ✅"
     else:
         title = "#Declined ❌"
-    return f"""{title}
 
-💳 Card: {card_full} 📨 Response: {response}
-
-🏦 Info: {info} 🏛 Bank: {bank} 🌍 Country: {country}
-
-⏱ Time: {taken}s"""
-
+    return f"""{title} #PayPal_Custom ($1.00) 🌟
+- - - - - - - - - - - - - - - - - - - - - -
+[ϟ] Card: {card_full}
+[ϟ] Response: {response}
+[ϟ] Status: {title}
+[ϟ] Taken: {taken}s
+- - - - - - - - - - - - - - - - - - - - - -
+[ϟ] Info: {info}
+[ϟ] Bank: {bank}
+[ϟ] Country: {country}
+[⌤] Dev by: . - 🍀"""
 # ------------------- Permissions -------------------
 
 def can_user_check(user_id, mode="file"):
