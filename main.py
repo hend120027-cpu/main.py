@@ -98,17 +98,17 @@ async def format_response(card_full, status, response, taken):
     info, bank, country = await get_bin_info(bin_number)
 
     if status == "approved":
-        title = "#Charge 🔥"
+        status_text = "#Charge 🔥"
     elif status == "live":
-        title = "#Live ✅"
+        status_text = "#Live ✅"
     else:
-        title = "#Declined ❌"
+        status_text = "#Declined ❌"
 
-    return f"#PayPal_Custom ($1.00) 🌟
+    return f"""#PayPal_Custom ($1.00) 🌟
 - - - - - - - - - - - - - - - - - - - - - -
 [ϟ] Card: {card_full}
 [ϟ] Response: {response}
-[ϟ] Status: {title}
+[ϟ] Status: {status_text}
 [ϟ] Taken: {taken}s
 - - - - - - - - - - - - - - - - - - - - - -
 [ϟ] Info: {info}
