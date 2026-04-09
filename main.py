@@ -5,6 +5,7 @@ import random
 import string
 import asyncio
 import httpx
+import json
 from telegram import Update
 from telegram.ext import (
     Application, CommandHandler, MessageHandler, filters, ContextTypes
@@ -12,17 +13,44 @@ from telegram.ext import (
 
 TOKEN = '8300383760:AAE9sT0n2a3lw1uKmaKU1kKARAgyqWXAcT4'
 
+# ------------------- Data Save -------------------
+
+DATA_FILE = "data.json"
+
+def load_data():
+    global VIP_USERS, BANNED_USERS, ALL_USERS, CODES
+    if os.path.exists(DATA_FILE):
+        try:
+            with open(DATA_FILE, "r") as f:
+                data = json.load(f)
+                VIP_USERS.update(data.get("VIP_USERS", {}))
+                BANNED_USERS.update(data.get("BANNED_USERS", {}))
+                ALL_USERS.update(data.get("ALL_USERS", []))
+                CODES.update(data.get("CODES", {}))
+        except Exception as e:
+            print("Load Error:", e)
+
+def save_data():
+    try:
+        with open(DATA_FILE, "w") as f:
+            json.dump({
+                "VIP_USERS": VIP_USERS,
+                "BANNED_USERS": BANNED_USERS,
+                "ALL_USERS": list(ALL_USERS),
+                "CODES": CODES
+            }, f)
+    except Exception as e:
+        print("Save Error:", e)
+
 # ------------------- Users -------------------
 
-ADMINS = [6843321125]  # ضع هنا ID الأدمن
-VIP_USERS = {}       # {user_id: expiration_timestamp}
-BANNED_USERS = {}    # {user_id: True}
-ALL_USERS = set()    # كل مستخدم دخل البوت
+ADMINS = [6843321125]
+VIP_USERS = {}
+BANNED_USERS = {}
+ALL_USERS = set()
 stop_users = {}
 last_check_time = {}
 ANTI_SPAM_SECONDS = 7
-
-# 🔥 أضف فوق خالص بعد المتغيرات
 user_tasks = {}
 
 # ------------------- Gates -------------------
@@ -36,7 +64,20 @@ api_semaphore = asyncio.Semaphore(6)
 
 # ------------------- Codes -------------------
 
-CODES = {}  # {"WAFA-XXXX-XXXX-XXXX": {"duration":7, "max_users":5, "used":0, "created":timestamp}}
+CODES = {}
+
+# ------------------- Retry 🔥 -------------------
+
+async def safe_check(card_full, retries=3):
+    for _ in range(retries):
+        try:
+            status, response = await check_card_api(card_full)
+            if response != "Error":
+                return status, response
+        except Exception as e:
+            print("Retry Error:", e)
+        await asyncio.sleep(1)
+    return "declined", "Failed after retries"
 
 # ------------------- BIN Lookup -------------------
 
@@ -143,6 +184,7 @@ def can_user_check(user_id, mode="file"):
 async def pp(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     ALL_USERS.add(user_id)
+    save_data()  # 🔥
 
     if not can_user_check(user_id, "single"):  
         await update.message.reply_text("❌ VIP only for single check.")  
@@ -156,7 +198,6 @@ async def pp(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return  
         last_check_time[user_id] = now  
 
-    # 🔥 حماية التاسك
     try:
         asyncio.create_task(process_pp(update, context))
     except Exception as e:
@@ -168,7 +209,7 @@ async def process_pp(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Usage:\n/pp 4242424242424242|09|28|123")
         return
     start_time = time.time()
-    status, response = await check_card_api(card_full)
+    status, response = await safe_check(card_full)  # 🔥
     taken = round(time.time()-start_time,2)
     text = await format_response(card_full, status, response, taken)
     await update.message.reply_text(text)
@@ -185,12 +226,12 @@ async def stop(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     ALL_USERS.add(user_id)
+    save_data()  # 🔥
 
     if not can_user_check(user_id, "file"):  
         await update.message.reply_text("❌ VIP only for file check.")  
         return  
 
-    # 🔥 الأدمن يقدر يشغل كذا ملف - غيره لا
     if user_id not in ADMINS:
         if user_id in user_tasks and not user_tasks[user_id].done():
             await update.message.reply_text("❌ Wait until current file finishes")
@@ -234,7 +275,7 @@ async def process_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 card_full = match[0]  
 
                 start_time=time.time()  
-                status,response = await check_card_api(card_full)  
+                status,response = await safe_check(card_full)  # 🔥
 
                 await asyncio.sleep(random.uniform(0,2))  
 
@@ -312,7 +353,6 @@ async def error_handler(update, context):
 
 # ------------------- باقي أوامر البوت -------------------
 
-# 🔥 إضافة /try
 async def try_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMINS:
         return
@@ -329,6 +369,8 @@ async def try_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def code_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     ALL_USERS.add(user_id)
+    save_data()  # 🔥
+
     if len(context.args)==0: 
         return await update.message.reply_text("Usage:\n/code YOURCODEHERE")
     code = context.args[0].upper()
@@ -339,6 +381,7 @@ async def code_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return await update.message.reply_text("❌ Code usage limit reached")
     VIP_USERS[user_id] = int(time.time()) + code_data["duration"] * 86400
     code_data["used"] += 1
+    save_data()  # 🔥
     await update.message.reply_text(f"✅ Code activated!\nYou are now VIP for {code_data['duration']} days.\nUsed {code_data['used']}/{code_data['max_users']}")
 
 # ------------------- /wafa -------------------
@@ -356,6 +399,7 @@ async def wafa_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return await update.message.reply_text("❌ Invalid numbers")
     code = "WAFA-"+"-".join("".join(random.choices(string.ascii_uppercase+string.digits,k=4)) for _ in range(3))
     CODES[code] = {"duration":duration,"max_users":max_users,"used":0,"created":time.time()}
+    save_data()  # 🔥
     await update.message.reply_text(f"✅ Created code:\n{code}\nDuration: {duration} days\nMax users: {max_users}")
 
 # ------------------- /show_users -------------------
@@ -382,6 +426,7 @@ async def ban_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid=int(context.args[0])
     BANNED_USERS[uid]=True
     VIP_USERS.pop(uid,None)
+    save_data()  # 🔥
     await update.message.reply_text(f"User {uid} banned ✅")
 
 async def unban_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -392,6 +437,7 @@ async def unban_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return await update.message.reply_text("Usage:\n/unban_user USER_ID")
     uid=int(context.args[0])
     BANNED_USERS.pop(uid,None)
+    save_data()  # 🔥
     await update.message.reply_text(f"User {uid} unbanned ✅")
 
 # ------------------- /start -------------------
@@ -399,14 +445,17 @@ async def unban_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     ALL_USERS.add(user_id)
+    save_data()  # 🔥
     await update.message.reply_text("Bot Ready ✅")
 
 # ------------------- Run -------------------
 
 def main():
+    load_data()  # 🔥
+
     app = Application.builder().token(TOKEN).build()
 
-    app.add_error_handler(error_handler)  # 🔥 مهم جدًا
+    app.add_error_handler(error_handler)
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("pp", pp))
