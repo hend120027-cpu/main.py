@@ -176,6 +176,7 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ------------------- process_file -------------------
 
 async def process_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def process_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     stop_users[user_id] = False
 
@@ -196,16 +197,14 @@ async def process_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         results = []
 
-        # 🔥 worker لكل كارت
-        async def process_line(line):
-            nonlocal approved, live, declined
-
+        for line in lines:
             if stop_users.get(user_id):
+                await update.message.reply_text("Stopped ⛔")
                 return
 
             match = re.findall(r'\d{12,16}\|\d{2}\|\d{2,4}\|\d{3,4}', line)
             if not match:
-                return
+                continue
 
             card_full = match[0]
 
@@ -225,35 +224,20 @@ async def process_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
             else:
                 declined += 1
 
-        # 🔥 تقسيم المهام (multi-task)
-        tasks = []
-        for line in lines:
-            if stop_users.get(user_id):
-                await update.message.reply_text("Stopped ⛔")
-                return
+            # 🔥 مهم: ده يمنع التهنيج
+            await asyncio.sleep(0.5)
 
-            tasks.append(asyncio.create_task(process_line(line)))
-
-            # 🔥 كل 10 كروت ينفذهم مرة واحدة (عشان السرعة وما يعلقش)
-            if len(tasks) >= 10:
-                await asyncio.gather(*tasks)
-                tasks = []
-
-                panel = f"""📊 Status
+            panel = f"""📊 Status
 
 ✅ Charge: {approved} 💥
 🟢 Live: {live} 💫
 ❌ Declined: {declined}
 📂 Total: {approved+live+declined}
 """
-                try:
-                    await panel_msg.edit_text(panel)
-                except:
-                    pass
-
-        # شغّل الباقي
-        if tasks:
-            await asyncio.gather(*tasks)
+            try:
+                await panel_msg.edit_text(panel)
+            except:
+                pass
 
         # حفظ النتائج
         with open(results_file_path, "w", encoding="utf-8") as f:
