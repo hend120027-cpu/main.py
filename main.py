@@ -22,8 +22,6 @@ stop_users = {}
 last_check_time = {}
 ANTI_SPAM_SECONDS = 7
 
-🔥 حماية التاسك 
-
 user_tasks = {}
 
 ------------------- Gates ------------------- 
