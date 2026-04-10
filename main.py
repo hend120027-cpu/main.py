@@ -184,6 +184,7 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"Error: {e}")
 
 # ------------------- process_file -------------------
+# 🔴 (داخل process_file فقط التعديل)
 
 async def process_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
@@ -194,7 +195,6 @@ async def process_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
         file_path = f"downloads/{file.file_id}.txt"
         await file.download_to_drive(file_path)
 
-        results_file_path = f"downloads/results_{file.file_id}.txt"
         approved = live = declined = 0
         panel_msg = await update.message.reply_text("Start Checking... 🔍")
 
@@ -213,6 +213,7 @@ async def process_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await asyncio.sleep(random.uniform(0, 2))
                 taken = round(time.time() - start_time, 2)
                 text = await format_response(card_full, status, response, taken)
+
                 if status == "approved":
                     approved += 1
                     await update.message.reply_text(text)
@@ -223,6 +224,7 @@ async def process_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     declined += 1
 
                 last_info, last_bank, last_country = await get_bin_info(card_full.split("|")[0][:6])
+
                 panel = f"""📊 Status
 
 ✅ Charge: {approved} 💥
@@ -240,14 +242,14 @@ async def process_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
 ━━━━━━━━━━━━━━━
 
 ⛔ Stop: {'ON' if stop_users.get(user_id) else 'OFF'}"""
+
                 try:
                     await panel_msg.edit_text(panel)
                 except:
                     pass
-                return text
+
             except Exception as e:
                 print(f"Line Error: {e}")
-                return None
 
         for line in lines:
             if stop_users.get(user_id):
@@ -259,18 +261,11 @@ async def process_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 print(f"Loop Error: {e}")
                 continue
 
-        with open(results_file_path, 'w', encoding='utf-8') as result_file:
-            for line in lines:
-                try:
-                    r = await format_response(line.strip(), "N/A", "N/A", 0)
-                    result_file.write(r + "\n\n")
-                except:
-                    continue
+        # ✅ النهاية (بدل الملف)
+        await update.message.reply_text("bone")
 
-        await update.message.reply_text(f"Done ✅\nResults saved: {results_file_path}")
     except Exception as e:
         await update.message.reply_text(f"❌ Error: {e}")
-
 # ------------------- ERROR HANDLER -------------------
 
 async def error_handler(update, context):
