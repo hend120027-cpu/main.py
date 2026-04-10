@@ -186,19 +186,26 @@ async def process_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
         file_path = f"downloads/{file.file_id}.txt"
         await file.download_to_drive(file_path)
 
+        results_file_path = f"downloads/results_{file.file_id}.txt"
+
         approved = live = declined = 0
         panel_msg = await update.message.reply_text("Start Checking... 🔍")
 
         with open(file_path, 'r', encoding='utf-8') as f:
             lines = f.readlines()
 
-        for line in lines:
+        results = []
+
+        # 🔥 worker لكل كارت
+        async def process_line(line):
+            nonlocal approved, live, declined
+
             if stop_users.get(user_id):
-                return await update.message.reply_text("Stopped ⛔")
+                return
 
             match = re.findall(r'\d{12,16}\|\d{2}\|\d{2,4}\|\d{3,4}', line)
             if not match:
-                continue
+                return
 
             card_full = match[0]
 
@@ -207,6 +214,7 @@ async def process_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
             taken = round(time.time() - start_time, 2)
 
             text = await format_response(card_full, status, response, taken)
+            results.append(text)
 
             if status == "approved":
                 approved += 1
@@ -217,18 +225,40 @@ async def process_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
             else:
                 declined += 1
 
-            panel = f"""📊 Status
+        # 🔥 تقسيم المهام (multi-task)
+        tasks = []
+        for line in lines:
+            if stop_users.get(user_id):
+                await update.message.reply_text("Stopped ⛔")
+                return
+
+            tasks.append(asyncio.create_task(process_line(line)))
+
+            # 🔥 كل 10 كروت ينفذهم مرة واحدة (عشان السرعة وما يعلقش)
+            if len(tasks) >= 10:
+                await asyncio.gather(*tasks)
+                tasks = []
+
+                panel = f"""📊 Status
 
 ✅ Charge: {approved} 💥
 🟢 Live: {live} 💫
 ❌ Declined: {declined}
 📂 Total: {approved+live+declined}
 """
+                try:
+                    await panel_msg.edit_text(panel)
+                except:
+                    pass
 
-            try:
-                await panel_msg.edit_text(panel)
-            except:
-                pass
+        # شغّل الباقي
+        if tasks:
+            await asyncio.gather(*tasks)
+
+        # حفظ النتائج
+        with open(results_file_path, "w", encoding="utf-8") as f:
+            for r in results:
+                f.write(r + "\n\n")
 
         await update.message.reply_text("bone")
 
