@@ -27,7 +27,7 @@ user_tasks = {}
 # ------------------- Gates -------------------
 
 GATES = [
-    "https://dandelionsmontessori.org/give/15767517?giveDonationFormInIframe=1",
+    "https://raybensch.com/donations/support-ray/",
     "https://www.mgn1.org/events/"
 ]
 gate_index = 0
