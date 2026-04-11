@@ -10,7 +10,7 @@ from telegram.ext import (
     Application, CommandHandler, MessageHandler, filters, ContextTypes
 )
 
-TOKEN = '8697100491:AAHFj14hZFIneFm2nWRNkpOrX6vshZsFu4o'
+TOKEN = '8785174673:AAGy1XaA099aoOXoxQB_Y6eyURE3B8aA9Oc'
 
 # ------------------- Users -------------------
 
