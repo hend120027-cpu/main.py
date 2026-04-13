@@ -28,8 +28,7 @@ user_tasks = {}
 
 GATES = [
     "https://raybensch.com/donations/support-ray/",
-    "https://www.mgn1.org/events/",
-    "https://9millionreasons.nyc/donations/4293-2/"
+    "https://www.mgn1.org/events/"
 ]
 gate_index = 0
 api_semaphore = asyncio.Semaphore(6)
