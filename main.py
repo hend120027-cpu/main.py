@@ -27,7 +27,7 @@ user_tasks = {}
 # ------------------- Gates -------------------
 
 GATES = [
-    "https://raybensch.com/donations/support-ray/"
+    "https://dandelionsmontessori.org/give/15767517?giveDonationFormInIframe=1"
 ]
 gate_index = 0
 api_semaphore = asyncio.Semaphore(6)
