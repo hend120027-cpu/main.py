@@ -27,7 +27,7 @@ user_tasks = {}
 # ------------------- Gates -------------------
 
 GATES = [
-    "https://arukahhouse.net/donate/",
+    "https://riversidefoxfoundation.org/donations/encore/",
     "https://animalcaretrust.org.uk/donations/please-help-bella"
 ]
 gate_index = 0
